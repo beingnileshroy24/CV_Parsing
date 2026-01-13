@@ -19,25 +19,29 @@ class GeminiParser:
 
     def parse_cv(self, cv_text: str) -> CVData:
         prompt = f"""
-        You are an expert CV parser. Your goal is to extract structured data from the CV text.
+        You are a highly advanced CV parsing AI. Your goal is to extract EVERY piece of information from the provided CV text without skipping a single detail.
         
         CRITICAL INSTRUCTIONS:
-        1. Extract standard fields (Education, Experience, Projects, Skills) as usual.
-        2. INTELLIGENT PARSING: Identify ANY other sections present in the CV (e.g., "Certifications", "Awards", "Publications", "Volunteering", "Languages", "Interests", "References").
-        3. Place these additional sections into the `custom_sections` list.
-        4. Do NOT ignore any information. If it doesn't fit standard fields, make a custom section for it.
+        1. VALIDATE ALL SECTIONS: Carefully scan for Personal Details, Education, Experience, Projects, and Skills.
+        2. DYNAMIC EXTRACTION: Identify any non-standard sections (e.g. Certifications, Awards, volunteering, Languages, Interests, Publications, References, Courses, Summary).
+        3. EXHAUSTIVE CONTENT: For Experience and Projects, extract all bullet points and descriptions. Do not summarize; keep the original detail.
+        4. CUSTOM SECTIONS: If ANY info remains that doesn't fit standard fields, create a new entry in `custom_sections` with a descriptive title and all relevant text as a list of strings in `content`.
+        5. CONTACT INFO: Look for GitHub, Portfolio, and Address in addition to Email/Phone/LinkedIn.
         
         CV Text:
         {cv_text}
         
-        Output JSON strictly. No markdown formatting.
+        Output valid JSON strictly. No markdown formatting.
         Schema:
         {{
             "personal_details": {{
                 "name": "string",
                 "email": "string",
                 "phone": "string",
+                "address": "string",
                 "linkedin": "string",
+                "github": "string",
+                "portfolio": "string",
                 "summary": "string"
             }},
             "education": [

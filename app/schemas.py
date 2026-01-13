@@ -5,7 +5,10 @@ class PersonalDetails(BaseModel):
     name: str = Field(..., description="Full name of the candidate")
     email: Optional[str] = Field(None, description="Email address")
     phone: Optional[str] = Field(None, description="Phone number")
+    address: Optional[str] = Field(None, description="Physical address or Location")
     linkedin: Optional[str] = Field(None, description="LinkedIn profile URL")
+    github: Optional[str] = Field(None, description="GitHub profile URL")
+    portfolio: Optional[str] = Field(None, description="Portfolio or Personal Website URL")
     summary: Optional[str] = Field(None, description="Professional summary")
 
 class Education(BaseModel):

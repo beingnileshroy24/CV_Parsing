@@ -6,9 +6,12 @@ class DocGenerator:
     def __init__(self, template_path: str = "templates/cv_template.docx"):
         self.template_path = template_path
 
-    def generate_docx(self, data: CVData) -> io.BytesIO:
+    def generate_docx(self, data: CVData, template_bytes: bytes = None) -> io.BytesIO:
         try:
-            doc = DocxTemplate(self.template_path)
+            if template_bytes:
+                doc = DocxTemplate(io.BytesIO(template_bytes))
+            else:
+                doc = DocxTemplate(self.template_path)
             
             # Convert Pydantic model to dict
             context = data.model_dump()
