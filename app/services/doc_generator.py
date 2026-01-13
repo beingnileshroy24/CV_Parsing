@@ -112,8 +112,9 @@ class DocGenerator:
                     w_tbl.remove(template_tr)
                     continue
                 
-                # Insert index base
-                insert_idx = i + 1
+                # Insert index base - crucial fix for row ordering
+                # We need the actual XML index, not the logical row index
+                insert_idx = template_tr.getparent().index(template_tr)
                 
                 for idx, data_item in enumerate(data_list):
                     # Clone the row element
