@@ -1,11 +1,13 @@
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, RichText
 from app.schemas import CVData
 import io
 import os
+from copy import deepcopy
+import re
 
 class DocGenerator:
-    def __init__(self, template_path: str = "templates/cv_template.docx"):
-        self.template_path = template_path
+    def __init__(self):
+        self.template_path = "templates/cv_template.docx"
 
     def generate_docx(self, data: CVData, template_bytes: bytes = None, template_style: str = "paragraph") -> io.BytesIO:
         try:
@@ -26,7 +28,9 @@ class DocGenerator:
                     actual_path = "templates/cv_template.docx"
                 docx = Document(actual_path)
             
+            # Convert to dictionary and PROCESS LINKS
             context = data.model_dump()
+            self._process_links(context, docx) # Pass docx if needed for relationship hacking, but RichText handles basic ones
             
             # STAGE 1: MANUAL EXPANSION on the python-docx Document
             self._manually_expand_tables(docx, context)
@@ -46,6 +50,74 @@ class DocGenerator:
         except Exception as e:
             print(f"Template Error Details: {e}")
             raise RuntimeError(f"Error generating DOCX: {e}")
+
+    def _process_links(self, context, docx):
+        """
+        Recursively scans the context dictionary for URL strings and converts them
+        into docxtpl.RichText objects with hyperlinks.
+        Also handles specific fields like 'project.url'.
+        """
+        # Improved Regex to catch linkedin.com/..., github.com/... without protocol
+        URL_REGEX = re.compile(r'(https?://[^\s]+|www\.[^\s]+|(?:linkedin\.com|github\.com|gitlab\.com)/[^\s]+)', re.IGNORECASE)
+        
+        def convert_text(text):
+            if not isinstance(text, str): return text
+            
+            matches = list(URL_REGEX.finditer(text))
+            if not matches:
+                return text
+            
+            rt = RichText()
+            last_idx = 0
+            for m in matches:
+                url = m.group(0)
+                start, end = m.span()
+                
+                # Add text before link
+                if start > last_idx:
+                    rt.add(text[last_idx:start])
+                
+                # Add link
+                href = url if url.startswith('http') else 'http://' + url
+                rt.add(url, url_id=href, color='0000FF', underline=True)
+                last_idx = end
+            
+            # Add remaining text
+            if last_idx < len(text):
+                rt.add(text[last_idx:])
+                
+            return rt
+
+        # 1. Personal Details specific Links
+        pd = context.get('personal_details', {})
+        for field in ['linkedin', 'github', 'portfolio']:
+            if pd.get(field):
+                val = pd[field]
+                # Ensure it's treated as a link
+                href = val if val.startswith('http') else 'http://' + val
+                pd[field] = RichText(val, url_id=href, color='0000FF', underline=True)
+
+        # 2. Recursive scan for other fields
+        def recursive_scan(item):
+            if isinstance(item, dict):
+                for k, v in item.items():
+                    if k == 'url' and v and isinstance(v, str):
+                        # Explicit URL field in Project
+                        href = v if v.startswith('http') else 'http://' + v
+                        item[k] = RichText(v, url_id=href, color='0000FF', underline=True)
+                    elif isinstance(v, (dict, list)):
+                        recursive_scan(v)
+                    elif isinstance(v, str):
+                        # Attempt detecting links in descriptions/content
+                        item[k] = convert_text(v)
+            elif isinstance(item, list):
+                for idx, i in enumerate(item):
+                    if isinstance(i, (dict, list)):
+                        recursive_scan(i)
+                    elif isinstance(i, str):
+                        item[idx] = convert_text(i)
+        
+        recursive_scan(context)
 
     def _preprocess_context(self, context):
         """

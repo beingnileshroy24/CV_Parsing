@@ -27,6 +27,7 @@ class Project(BaseModel):
     name: str = Field(..., description="Project name")
     description: str = Field(..., description="Project description")
     technologies: List[str] = Field(default_factory=list, description="Technologies used")
+    url: Optional[str] = Field(None, description="URL to the project or repository")
 
 class CustomSection(BaseModel):
     title: str = Field(..., description="Title of the custom section (e.g., 'Awards', 'Certifications', 'Volunteering')")

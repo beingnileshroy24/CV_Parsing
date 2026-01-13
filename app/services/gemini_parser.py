@@ -25,8 +25,9 @@ class GeminiParser:
         1. VALIDATE ALL SECTIONS: Carefully scan for Personal Details, Education, Experience, Projects, and Skills.
         2. DYNAMIC EXTRACTION: Identify any non-standard sections (e.g. Certifications, Awards, volunteering, Languages, Interests, Publications, References, Courses, Summary).
         3. EXHAUSTIVE CONTENT: For Experience and Projects, extract all bullet points and descriptions. Do not summarize; keep the original detail.
-        4. CUSTOM SECTIONS: If ANY info remains that doesn't fit standard fields, create a new entry in `custom_sections` with a descriptive title and all relevant text as a list of strings in `content`.
-        5. CONTACT INFO: Look for GitHub, Portfolio, and Address in addition to Email/Phone/LinkedIn.
+        4. HYPERLINKS: Extract URLs for Projects, Certifications, and Portfolios whenever possible.
+        5. CUSTOM SECTIONS: If ANY info remains that doesn't fit standard fields, create a new entry in `custom_sections` with a descriptive title and all relevant text as a list of strings in `content`.
+        6. CONTACT INFO: Look for GitHub, Portfolio, and Address in addition to Email/Phone/LinkedIn.
         
         CV Text:
         {cv_text}
@@ -64,7 +65,8 @@ class GeminiParser:
                 {{
                     "name": "string",
                     "description": "string",
-                    "technologies": ["string"]
+                    "technologies": ["string"],
+                    "url": "string"
                 }}
             ],
             "skills": ["string"],
