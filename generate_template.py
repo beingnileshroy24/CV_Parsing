@@ -6,8 +6,8 @@ def create_paragraph_template():
     doc.add_heading('{{ personal_details.name }}', 0)
     
     p = doc.add_paragraph()
-    p.add_run('Email: {{ personal_details.email }}').bold = True
-    p.add_run(' | Phone: {{ personal_details.phone }}')
+    p.add_run('{% if personal_details.email %}Email: {{ personal_details.email }}{% endif %}').bold = True
+    p.add_run('{% if personal_details.phone %} | Phone: {{ personal_details.phone }}{% endif %}')
     p.add_run('{% if personal_details.address %}\nAddress: {{ personal_details.address }}{% endif %}')
     
     p2 = doc.add_paragraph()
@@ -64,7 +64,7 @@ def create_tabular_template():
     
     # Contact Info
     p = doc.add_paragraph()
-    p.add_run('Email: {{ personal_details.email }} | Phone: {{ personal_details.phone }}')
+    p.add_run('{% if personal_details.email %}Email: {{ personal_details.email }}{% endif %}{% if personal_details.phone %} | Phone: {{ personal_details.phone }}{% endif %}')
     p.add_run('{% if personal_details.address %}\nAddress: {{ personal_details.address }}{% endif %}')
     
     # Sections using Tables

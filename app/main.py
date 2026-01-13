@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import StreamingResponse, FileResponse
 from app.schemas import CVData
 from app.services.gemini_parser import parser_service
@@ -49,12 +49,22 @@ async def parse_cv(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 @app.post("/generate")
-async def generate_cv(data: CVData, style: str = "paragraph", template_file: Optional[UploadFile] = None):
+async def generate_cv(data: CVData, style: str = "paragraph", template_file: Optional[UploadFile] = None, masking: bool = False):
     """
     Generates a formatted DOCX CV based on the provided JSON data.
     Optionally accepts a customized DOCX template or a default style ('paragraph' or 'tabular').
+    If masking=True, contact details (email, phone, address, linkedin, etc.) will be hidden.
     """
     try:
+        # Scrub data if masking is enabled
+        if masking:
+            data.personal_details.email = None
+            data.personal_details.phone = None
+            data.personal_details.address = None
+            data.personal_details.linkedin = None
+            data.personal_details.github = None
+            data.personal_details.portfolio = None
+        
         template_bytes = None
         if template_file and template_file.filename:
             template_bytes = await template_file.read()
@@ -71,11 +81,13 @@ async def generate_cv(data: CVData, style: str = "paragraph", template_file: Opt
 @app.post("/process")
 async def process_full_flow(
     file: UploadFile = File(...), 
-    style: str = "paragraph", 
-    template_file: Optional[UploadFile] = None
+    style: str = Form("paragraph"), 
+    template_file: Optional[UploadFile] = None,
+    masking: bool = Form(False)
 ):
     """
     End-to-end flow: Upload raw CV + Optional Template -> Parse -> Generate DOCX.
+    If masking=True, contact details will be removed from the final DOCX.
     """
     try:
         # 1. Extract Text from CV
@@ -83,6 +95,15 @@ async def process_full_flow(
         
         # 2. Parse with Gemini
         parsed_data = parser_service.parse_cv(text)
+        
+        # 2.5 Masking
+        if masking:
+            parsed_data.personal_details.email = None
+            parsed_data.personal_details.phone = None
+            parsed_data.personal_details.address = None
+            parsed_data.personal_details.linkedin = None
+            parsed_data.personal_details.github = None
+            parsed_data.personal_details.portfolio = None
         
         # 3. Read Template if provided correctly
         template_bytes = None
