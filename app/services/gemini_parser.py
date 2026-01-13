@@ -15,19 +15,24 @@ class GeminiParser:
     def __init__(self):
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     def parse_cv(self, cv_text: str) -> CVData:
         prompt = f"""
         You are a highly advanced CV parsing AI. Your goal is to extract EVERY piece of information from the provided CV text without skipping a single detail.
         
         CRITICAL INSTRUCTIONS:
-        1. VALIDATE ALL SECTIONS: Carefully scan for Personal Details, Education, Experience, Projects, and Skills.
-        2. DYNAMIC EXTRACTION: Identify any non-standard sections (e.g. Certifications, Awards, volunteering, Languages, Interests, Publications, References, Courses, Summary).
+        1. VALIDATE ALL SECTIONS: Carefully scan for:
+           - **Personal Details**: Contact info, social links.
+           - **Education**: Also known as "Academic Background", "Qualifications", "Scholastic Achievements".
+           - **Experience**: Also known as "Work Experience", "Employment History", "Professional Background", "Career Path".
+           - **Projects**: Also known as "Key Projects", "Academic Projects", "Personal Projects".
+           - **Skills**: Also known as "Technical Skills", "Competencies", "Technologies", "Core Skills".
+           - **Languages**: Spoken languages (e.g. English, Spanish).
+        2. DYNAMIC EXTRACTION: Identify any non-standard sections (e.g. Certifications ("Credentials", "Licensure"), Awards ("Honors", "Achievements"), volunteering, Interests, Publications, References, Courses, Summary ("Objective", "Profile")).
         3. EXHAUSTIVE CONTENT: For Experience and Projects, extract all bullet points and descriptions. Do not summarize; keep the original detail.
         4. HYPERLINKS: Extract URLs for Projects, Certifications, and Portfolios whenever possible.
-        5. CUSTOM SECTIONS: If ANY info remains that doesn't fit standard fields, create a new entry in `custom_sections` with a descriptive title and all relevant text as a list of strings in `content`.
-        6. CONTACT INFO: Look for GitHub, Portfolio, and Address in addition to Email/Phone/LinkedIn.
+        5. CONTACT INFO: Look for Job Title, DOB, Gender, GitHub, Portfolio, and Address in addition to Email/Phone/LinkedIn.
         
         CV Text:
         {cv_text}
@@ -37,6 +42,9 @@ class GeminiParser:
         {{
             "personal_details": {{
                 "name": "string",
+                "job_title": "string",
+                "date_of_birth": "string",
+                "gender": "string",
                 "email": "string",
                 "phone": "string",
                 "address": "string",
@@ -70,6 +78,7 @@ class GeminiParser:
                 }}
             ],
             "skills": ["string"],
+            "languages": ["string"],
             "custom_sections": [
                 {{
                     "title": "string",

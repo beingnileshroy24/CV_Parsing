@@ -3,9 +3,12 @@ from pydantic import BaseModel, Field
 
 class PersonalDetails(BaseModel):
     name: str = Field(..., description="Full name of the candidate")
+    job_title: Optional[str] = Field(None, description="Current role or Applied Position (e.g. Software Engineer)")
     email: Optional[str] = Field(None, description="Email address")
     phone: Optional[str] = Field(None, description="Phone number")
     address: Optional[str] = Field(None, description="Physical address or Location")
+    date_of_birth: Optional[str] = Field(None, description="Date of Birth")
+    gender: Optional[str] = Field(None, description="Gender")
     linkedin: Optional[str] = Field(None, description="LinkedIn profile URL")
     github: Optional[str] = Field(None, description="GitHub profile URL")
     portfolio: Optional[str] = Field(None, description="Portfolio or Personal Website URL")
@@ -39,4 +42,5 @@ class CVData(BaseModel):
     experience: List[Experience] = Field(default_factory=list)
     projects: List[Project] = Field(default_factory=list)
     skills: List[str] = Field(default_factory=list, description="List of technical/soft skills")
+    languages: List[str] = Field(default_factory=list, description="List of spoken languages")
     custom_sections: List[CustomSection] = Field(default_factory=list, description="Any other sections found in the CV not covered above")

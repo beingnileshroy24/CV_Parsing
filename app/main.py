@@ -64,6 +64,8 @@ async def generate_cv(data: CVData, style: str = "paragraph", template_file: Opt
             data.personal_details.linkedin = None
             data.personal_details.github = None
             data.personal_details.portfolio = None
+            data.personal_details.date_of_birth = None
+            data.personal_details.gender = None
         
         template_bytes = None
         if template_file and template_file.filename:
@@ -104,6 +106,9 @@ async def process_full_flow(
             parsed_data.personal_details.linkedin = None
             parsed_data.personal_details.github = None
             parsed_data.personal_details.portfolio = None
+            parsed_data.personal_details.date_of_birth = None
+            parsed_data.personal_details.gender = None
+            # job_title is usually not masked as it's professional info, but can add if requested. User asked for "personal data"
         
         # 3. Read Template if provided correctly
         template_bytes = None

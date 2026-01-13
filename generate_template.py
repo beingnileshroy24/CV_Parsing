@@ -4,11 +4,14 @@ from docx.shared import Pt, RGBColor
 def create_paragraph_template():
     doc = Document()
     doc.add_heading('{{ personal_details.name }}', 0)
-    
+    doc.add_paragraph('{{ personal_details.job_title }}').alignment = 1 # Center align job title? Or just default. Let's keep it simple.
+
     p = doc.add_paragraph()
     p.add_run('{% if personal_details.email %}Email: {{ personal_details.email }}{% endif %}').bold = True
     p.add_run('{% if personal_details.phone %} | Phone: {{ personal_details.phone }}{% endif %}')
     p.add_run('{% if personal_details.address %}\nAddress: {{ personal_details.address }}{% endif %}')
+    p.add_run('{% if personal_details.date_of_birth %} | DOB: {{ personal_details.date_of_birth }}{% endif %}')
+    p.add_run('{% if personal_details.gender %} | Gender: {{ personal_details.gender }}{% endif %}')
     
     p2 = doc.add_paragraph()
     p2.add_run('{% if personal_details.linkedin %}LinkedIn: {{ personal_details.linkedin }}{% endif %}')
@@ -23,6 +26,11 @@ def create_paragraph_template():
     doc.add_paragraph('{% if skills %}')
     doc.add_heading('Skills', level=1)
     doc.add_paragraph('{% for skill in skills %}{{ skill }}{% if not loop.last %}, {% endif %}{% endfor %}')
+    doc.add_paragraph('{% endif %}')
+
+    doc.add_paragraph('{% if languages %}')
+    doc.add_heading('Languages', level=1)
+    doc.add_paragraph('{% for lang in languages %}{{ lang }}{% if not loop.last %}, {% endif %}{% endfor %}')
     doc.add_paragraph('{% endif %}')
     
     doc.add_paragraph('{% if education %}')
@@ -61,11 +69,14 @@ def create_paragraph_template():
 def create_tabular_template():
     doc = Document()
     doc.add_heading('{{ personal_details.name }}', 0)
+    doc.add_paragraph('{{ personal_details.job_title }}')
     
     # Contact Info
     p = doc.add_paragraph()
     p.add_run('{% if personal_details.email %}Email: {{ personal_details.email }}{% endif %}{% if personal_details.phone %} | Phone: {{ personal_details.phone }}{% endif %}')
     p.add_run('{% if personal_details.address %}\nAddress: {{ personal_details.address }}{% endif %}')
+    p.add_run('{% if personal_details.date_of_birth %} | DOB: {{ personal_details.date_of_birth }}{% endif %}')
+    p.add_run('{% if personal_details.gender %} | Gender: {{ personal_details.gender }}{% endif %}')
     
     # Sections using Tables
     # Education
@@ -110,6 +121,11 @@ def create_tabular_template():
     # Skills and Custom Sections
     doc.add_heading('Skills', level=1)
     doc.add_paragraph('{{ skills|join(", ") }}')
+
+    doc.add_paragraph('{% if languages %}')
+    doc.add_heading('Languages', level=1)
+    doc.add_paragraph('{{ languages|join(", ") }}')
+    doc.add_paragraph('{% endif %}')
     
     doc.add_paragraph('{% for section in custom_sections %}')
     doc.add_heading('{{ section.title }}', level=1)
