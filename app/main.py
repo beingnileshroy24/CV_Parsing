@@ -22,6 +22,8 @@ def download_template(style: str = "paragraph"):
     """
     if style == "tabular":
         template_path = "templates/tabular_template.docx"
+    elif style == "tech6":
+        template_path = "templates/tech6_template.docx"
     else:
         template_path = "templates/paragraph_template.docx"
         
@@ -96,7 +98,8 @@ async def process_full_flow(
         text = await extract_text_from_upload_file(file)
         
         # 2. Parse with Gemini
-        parsed_data = parser_service.parse_cv(text)
+        is_tech6 = (style == "tech6")
+        parsed_data = parser_service.parse_cv(text, tech6=is_tech6)
         
         # 2.5 Masking
         if masking:

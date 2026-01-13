@@ -21,6 +21,8 @@ class DocGenerator:
                 actual_path = self.template_path
                 if template_style == "tabular":
                     actual_path = "templates/tabular_template.docx"
+                elif template_style == "tech6":
+                    actual_path = "templates/tech6_template.docx"
                 elif template_style == "paragraph":
                     actual_path = "templates/paragraph_template.docx"
                 

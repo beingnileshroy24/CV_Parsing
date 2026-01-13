@@ -15,9 +15,12 @@ class GeminiParser:
     def __init__(self):
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
-        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
 
-    def parse_cv(self, cv_text: str) -> CVData:
+    def parse_cv(self, cv_text: str, tech6: bool = False) -> CVData:
+        if tech6:
+            return self._parse_tech6(cv_text)
+
         prompt = f"""
         You are a highly advanced CV parsing AI. Your goal is to extract EVERY piece of information from the provided CV text without skipping a single detail.
         
@@ -78,7 +81,12 @@ class GeminiParser:
                 }}
             ],
             "skills": ["string"],
-            "languages": ["string"],
+            "languages": [
+                {{
+                    "language": "string",
+                    "proficiency": "string"
+                }} 
+            ],
             "custom_sections": [
                 {{
                     "title": "string",
@@ -98,5 +106,67 @@ class GeminiParser:
             print(f"Error parsing Gemini response: {e}")
             print(f"Raw response: {response.text}")
             raise ValueError("Failed to parse CV data from Gemini response")
+
+    def _parse_tech6(self, cv_text: str) -> CVData:
+        prompt = f"""
+        You are a Proposal Specialist converting a raw CV into the "FORM TECH-6" format.
+
+        **Input CV:**
+        {cv_text}
+
+        **Extraction Rules:**
+        1. **Header Info:**
+           - "Proposed Position": Infer the best title based on their experience (e.g., "Software Developer (Python)").
+           - "Name of Firm": Use their *current* or *most recent* employer.
+           - "Nationality": Infer from location/context if not explicit (default to "Indian" if context strongly implies, else null).
+           - "Personal Details": Extract Name, DOB, Job Title (as extracted above).
+
+        2. **Tables:**
+           - **Education**: Extract Degree, College, Date (Year).
+           - **Training**: Look for certifications or short courses. If none, return empty list.
+           - **Languages**: Extract language name and Proficiency as "Excellent/Good/Fair in speaking, reading, writing".
+           - **Employment Record**: List ALL jobs in reverse chronological order (Present to Past). Map to 'experience' list.
+           - **Countries of Work**: List strings of countries worked in.
+
+        3. **CRITICAL - Representative Project (Section 13):**
+           - Select the **single most significant/recent project** from the CV that demonstrates their core capability.
+           - **Client**: Extract the actual client name (e.g., "Country Financial" or "Policy Insurance").
+           - **Main Features**: Summarize the project scope into a coherent narrative paragraph (not bullet points).
+           - **Activities**: List specific technical tasks performed.
+           - **Location**: Infer city/country.
+
+        **Output JSON Schema:**
+        {{
+            "personal_details": {{ "name": "...", "date_of_birth": "...", "job_title": "...", "email": "...", "phone": "...", "address": "...", "linkedin": "...", "github": "...", "portfolio": "...", "summary": "..." }},
+            "firm_name": "...",
+            "proposed_position": "...",
+            "nationality": "...",
+            "memberships": [ {{ "society": "...", "date": "..." }} ],
+            "education": [ {{ "degree": "...", "institution": "...", "year": "..." }} ],
+            "training": [ {{ "title": "...", "start_date": "...", "end_date": "..." }} ],
+            "countries_of_work": ["..."],
+            "languages": [ {{ "language": "...", "proficiency": "..." }} ],
+            "experience": [
+                {{ "role": "...", "company": "...", "duration": "...", "description": ["..."] }}
+            ],
+            "representative_project": {{
+                "name": "...",
+                "year": "...",
+                "location": "...",
+                "client": "...",
+                "main_features": "...",
+                "positions_held": "...",
+                "activities": "..."
+            }}
+        }}
+        """
+        response = self.model.generate_content(prompt)
+        try:
+            cleaned_response = response.text.replace("```json", "").replace("```", "").strip()
+            data_dict = json.loads(cleaned_response)
+            return CVData(**data_dict)
+        except Exception as e:
+            print(f"Error parsing Gemini TECH-6 response: {e}")
+            raise ValueError(f"Failed to parse TECH-6 data: {e}")
 
 parser_service = GeminiParser()
